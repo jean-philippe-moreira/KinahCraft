@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KinahCraft</title>
+  <style>
+    :root {
+      --bg: #0a0c12; --panel: #141824; --row: #0f121b; --line: #262c3d; --gold-line: rgba(227, 189, 110, .25);
+      --text: #e9ecf5; --muted: #8b93a8; --faint: #5b647a; --gold: #e3bd6e; --link: #5aa2f0;
+      --warn: #e8a35c; --danger: #e77c7c;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 Inter, "Segoe UI", Roboto, Arial, sans-serif; }
+    main { max-width: 1040px; margin: 0 auto; padding: 24px 16px 64px; }
+
+    .hero { padding: 24px 28px; background: linear-gradient(120deg, #23232a, var(--panel) 60%); border: 1px solid var(--line); }
+    .eyebrow { margin: 0 0 8px; color: var(--gold); font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+    h1 { margin: 0; color: #f6ecd8; font-size: 34px; line-height: 1.15; }
+    .hero p:last-child { margin: 8px 0 0; color: var(--muted); }
+
+    .card { margin-top: 16px; padding: 16px; background: var(--panel); border: 1px solid var(--gold-line); border-radius: 16px; }
+    .fields { display: grid; grid-template-columns: auto 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    label, .field-label { display: block; margin-bottom: 6px; color: var(--muted); font-size: 13px; }
+    select, input[type="text"], textarea {
+      width: 100%; padding: 10px 12px; color: var(--text); background: var(--row);
+      border: 1px solid var(--line); border-radius: 10px; font: inherit;
+    }
+    select:focus, input:focus, textarea:focus, button:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+    textarea { display: block; min-height: 132px; resize: vertical; font-family: Consolas, monospace; font-size: 13px; }
+
+    .factions { display: flex; padding: 3px; background: var(--row); border: 1px solid var(--line); border-radius: 10px; }
+    .factions label { margin: 0; }
+    .factions input { position: absolute; opacity: 0; }
+    .factions span { display: block; padding: 7px 14px; color: var(--muted); border-radius: 7px; font-size: 14px; cursor: pointer; }
+    .factions input:checked + span { color: var(--gold); background: #2a2a2c; }
+    .factions input:focus-visible + span { outline: 2px solid var(--gold); }
+
+    .submit {
+      margin-top: 16px; padding: 10px 28px; color: #2a1e05; background: linear-gradient(180deg, #f0cf7c, #cfa349);
+      border: 0; border-radius: 10px; font: inherit; font-weight: 700; cursor: pointer;
+    }
+    .submit:disabled { opacity: .6; cursor: wait; }
+
+    .summary { display: flex; align-items: center; gap: 16px; }
+    .summary-text { flex: 1; min-width: 0; }
+    .summary h2 { margin: 0; color: var(--gold); font-size: 22px; line-height: 1.25; }
+    .summary-meta { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+    .summary-total { text-align: right; }
+    .summary-total span { display: block; color: var(--faint); font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+    .summary-total strong { color: var(--gold); font-size: 26px; white-space: nowrap; }
+
+    .icon { flex: none; display: block; width: 42px; height: 42px; object-fit: contain; }
+    .icon-large { padding: 4px; width: 68px; height: 68px; background: #1d1a14; border: 1px solid var(--gold); border-radius: 12px; }
+
+    .section-title { margin: 0 0 12px; color: var(--faint); font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+    .material, .material-head {
+      display: grid; grid-template-columns: 42px minmax(0, 1fr) 120px 76px 100px 120px; gap: 12px; align-items: center;
+    }
+    .material-head { padding: 0 12px 8px; color: var(--faint); font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+    .material-head span { text-align: right; }
+    .material-head span:nth-child(2) { text-align: left; }
+    .material-head span:nth-child(3) { text-align: center; }
+    .material { margin-top: 8px; padding: 9px 12px; background: var(--row); border: 1px solid var(--line); border-radius: 12px; }
+    .material-name { color: var(--link); font-weight: 500; }
+    .material-meta { color: var(--faint); font-size: 12px; }
+    .tag { margin-left: 6px; color: var(--warn); font-size: 12px; font-weight: 400; }
+    .value { color: var(--text); text-align: right; white-space: nowrap; }
+    .value-total { font-weight: 700; color: #f6ecd8; }
+    .quantity { color: var(--gold); font-weight: 700; }
+    .none { color: var(--danger); }
+
+    .stepper { display: flex; align-items: center; height: 32px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+    .stepper button { width: 30px; height: 100%; color: var(--muted); background: none; border: 0; font: inherit; cursor: pointer; }
+    .stepper button:hover { color: var(--gold); }
+    .stepper input {
+      flex: 1; width: 100%; min-width: 0; padding: 0; color: var(--text); background: none;
+      border: 0; font: inherit; text-align: center; -moz-appearance: textfield;
+    }
+    .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+    .notice { margin: 12px 0 0; color: var(--warn); font-size: 14px; }
+    .error { margin-top: 16px; color: var(--danger); }
+
+    @media (max-width: 760px) {
+      .fields { grid-template-columns: 1fr; }
+      .factions { width: max-content; }
+      .summary { flex-wrap: wrap; }
+      .summary-total { width: 100%; text-align: left; }
+      .material-head { display: none; }
+      .material { grid-template-columns: 42px minmax(0, 1fr) auto; }
+      .material-info { grid-column: 2 / -1; }
+      .stepper { grid-column: 1 / 3; }
+      .quantity { grid-column: 3; grid-row: 2; }
+      .value[data-label] { display: flex; justify-content: space-between; grid-column: 1 / -1; }
+      .value[data-label]::before { content: attr(data-label); color: var(--faint); font-weight: 400; }
+      h1 { font-size: 28px; }
+      .hero { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="card hero">
+      <p class="eyebrow">Planejamento de produção</p>
+      <h1>KinahCraft</h1>
+      <p>Cole a lista do “Copy list” e veja quanto custa cada material no seu servidor.</p>
+    </header>
+
+    <form class="card" id="form">
+      <div class="fields">
+        <div>
+          <span class="field-label">Facção</span>
+          <div class="factions" role="radiogroup" aria-label="Facção">
+            <label><input type="radio" name="faction" value="Elyos"><span>Elyos</span></label>
+            <label><input type="radio" name="faction" value="Asmodian" checked><span>Asmodian</span></label>
+          </div>
+        </div>
+        <div>
+          <label for="server">Servidor</label>
+          <select id="server" required></select>
+        </div>
+        <div>
+          <label for="item">Item (opcional)</label>
+          <input type="text" id="item" placeholder="Nome do item" autocomplete="off">
+        </div>
+      </div>
+
+      <label for="list">Lista de materiais</label>
+      <textarea id="list" required spellcheck="false" placeholder="Nome do material x10&#10;Outro material x25"></textarea>
+
+      <button type="submit" class="submit" id="submit">Calcular</button>
+    </form>
+
+    <section id="result" aria-live="polite"></section>
+  </main>
+
+  <script>
+    const STORAGE_KEY = 'kinahcraft';
+    const fields = {
+      form: document.getElementById('form'),
+      server: document.getElementById('server'),
+      item: document.getElementById('item'),
+      list: document.getElementById('list'),
+      submit: document.getElementById('submit'),
+      result: document.getElementById('result'),
+    };
+    let servers = [];
+
+    const formatNumber = (value) => (value == null ? '—' : Math.round(value).toLocaleString('pt-BR'));
+    const selectedFaction = () => fields.form.elements.faction.value;
+
+    function loadSaved() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) ?? {};
+      } catch {
+        return {};
+      }
+    }
+
+    function save() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          faction: selectedFaction(),
+          server: fields.server.value,
+          item: fields.item.value,
+          list: fields.list.value,
+        }));
+      } catch {
+        // O app funciona sem lembrar a última escolha.
+      }
+    }
+
+    function fillServers(selected) {
+      const options = servers
+        .filter((server) => server.faction === selectedFaction())
+        .sort((a, b) => a.region_name.localeCompare(b.region_name) || a.name.localeCompare(b.name))
+        .map((server) => new Option(`${server.name} — ${server.region_name}`, server.server_id));
+      fields.server.replaceChildren(...options);
+      if (selected) fields.server.value = selected;
+    }
+
+    function element(tag, text, className) {
+      const node = document.createElement(tag);
+      if (text != null) node.textContent = text;
+      if (className) node.className = className;
+      return node;
+    }
+
+    function renderIcon(url, className = 'icon') {
+      const placeholder = element('span', null, className);
+      if (!url) return placeholder;
+
+      const image = new Image();
+      image.className = className;
+      image.alt = '';
+      image.addEventListener('error', () => image.replaceWith(placeholder));
+      image.src = url;
+      return image;
+    }
+
+    function renderStepper(line, onChange) {
+      const stepper = element('div', null, 'stepper');
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.min = 0;
+      input.value = 0;
+      input.setAttribute('aria-label', `Quantidade de ${line.name} que você tem`);
+
+      const setHave = (value) => {
+        line.have = Math.max(0, Math.floor(Number(value) || 0));
+        input.value = line.have;
+        onChange();
+      };
+      const button = (text, label, delta) => {
+        const node = element('button', text);
+        node.type = 'button';
+        node.setAttribute('aria-label', label);
+        node.addEventListener('click', () => setHave(line.have + delta));
+        return node;
+      };
+
+      input.addEventListener('change', () => setHave(input.value));
+      stepper.append(button('−', 'Diminuir', -1), input, button('+', 'Aumentar', 1));
+      return stepper;
+    }
+
+    function renderLine(line, updateTotal) {
+      line.have = 0;
+      const row = element('div', null, 'material');
+
+      const info = element('div', null, 'material-info');
+      const name = element('div', line.name, 'material-name');
+      if (line.source === 'last') name.append(element('span', 'último preço', 'tag'));
+      info.append(name);
+      if (line.listings != null) {
+        const average = line.avgSalePrice == null ? '' : ` · média ${formatNumber(line.avgSalePrice)}`;
+        info.append(element('div', `${formatNumber(line.listings)} ofertas${average}`, 'material-meta'));
+      }
+
+      const quantity = element('div', `×${formatNumber(line.quantity)}`, 'value quantity');
+      const price = element('div', line.unitPrice == null ? 'sem preço' : formatNumber(line.unitPrice), `value${line.unitPrice == null ? ' none' : ''}`);
+      price.dataset.label = 'Preço unit.';
+      const total = element('div', null, 'value value-total');
+      total.dataset.label = 'Total';
+
+      line.updateTotal = () => {
+        line.cost = line.unitPrice == null ? null : line.unitPrice * Math.max(0, line.quantity - line.have);
+        total.textContent = formatNumber(line.cost);
+      };
+      line.updateTotal();
+
+      const onChange = () => {
+        line.updateTotal();
+        updateTotal();
+      };
+      row.append(renderIcon(line.icon), info, renderStepper(line, onChange), quantity, price, total);
+      return row;
+    }
+
+    function renderQuote(quote) {
+      const totalValue = element('strong');
+      const updateTotal = () => {
+        const sum = quote.lines.reduce((total, line) => total + (line.cost ?? 0), 0);
+        totalValue.textContent = `${formatNumber(sum)} Kinah`;
+      };
+
+      const list = element('div', null, 'card');
+      const head = element('div', null, 'material-head');
+      ['', 'Material', 'Tenho', 'Qtd.', 'Preço unit.', 'Total'].forEach((title) => head.append(element('span', title)));
+      list.append(element('p', 'Lista de compras · materiais', 'section-title'), head);
+      list.append(...quote.lines.map((line) => renderLine(line, updateTotal)));
+      updateTotal();
+
+      if (quote.unpriced.length) {
+        list.append(element('p', `Fora do total, sem preço no mercado: ${quote.unpriced.join(', ')}.`, 'notice'));
+      }
+      if (quote.invalid.length) {
+        list.append(element('p', `Linhas ignoradas: ${quote.invalid.join(', ')}.`, 'notice'));
+      }
+
+      const summary = element('div', null, 'card summary');
+      const text = element('div', null, 'summary-text');
+      const server = fields.server.selectedOptions[0]?.textContent;
+      text.append(
+        element('h2', quote.item?.name || 'Materiais do craft'),
+        element('p', `${selectedFaction()} · ${server} · ${quote.lines.length} materiais`, 'summary-meta'),
+      );
+      const total = element('div', null, 'summary-total');
+      total.append(element('span', 'Custo de compra'), totalValue);
+      if (quote.item) summary.append(renderIcon(quote.item.icon, 'icon icon-large'));
+      summary.append(text, total);
+
+      fields.result.replaceChildren(summary, list);
+      summary.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    async function requestJson(url, options) {
+      const response = await fetch(url, options);
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error);
+      return body;
+    }
+
+    function showError(message) {
+      fields.result.replaceChildren(element('p', message, 'error'));
+    }
+
+    fields.form.addEventListener('change', (event) => {
+      if (event.target.name === 'faction') fillServers();
+    });
+
+    fields.form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      save();
+      fields.submit.disabled = true;
+      fields.submit.textContent = 'Buscando preços…';
+
+      try {
+        const quote = await requestJson('/api/quote', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            server: Number(fields.server.value),
+            item: fields.item.value,
+            list: fields.list.value,
+          }),
+        });
+        renderQuote(quote);
+      } catch (error) {
+        showError(error.message);
+      } finally {
+        fields.submit.disabled = false;
+        fields.submit.textContent = 'Calcular';
+      }
+    });
+
+    (async () => {
+      const saved = loadSaved();
+      if (saved.faction) fields.form.elements.faction.value = saved.faction;
+      if (saved.item) fields.item.value = saved.item;
+      if (saved.list) fields.list.value = saved.list;
+
+      try {
+        servers = await requestJson('/api/servers');
+        fillServers(saved.server);
+      } catch (error) {
+        showError(`Não foi possível carregar os servidores: ${error.message}`);
+      }
+    })();
+  </script>
+</body>
+</html>
